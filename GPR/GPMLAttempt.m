@@ -15,7 +15,7 @@ moisture = table2array(moisture); signals = table2array(signals);
 %% Indexing Section
 %Make indexing array by selecting random pixels, approximately 70% of
 %total number of pixels
-totalPix = 679; trainPix = 475; numBands = 125;
+totalPix = 679; trainPix = 472; numBands = 125;
 index = randperm(totalPix,trainPix);
 
 %Extract random pixels and their corresponding moisture content into their 
@@ -26,54 +26,64 @@ for s = 1:trainPix
     randMoisture(s) = moisture(index(s));
 end
 
+totalError = zeros(1,8);
+
 %% Training Section
-error = zeros(8,1);
-for smooth = 1:8
-% Train a model using the random pixels and moisture content
-  meanfunc = []; %hyp.mean = [0.5; 1];
-  covfunc = {@covSum, {{@covMaternard, smooth}, @covNoise}}; %ell = 1/4; sf = 1; hyp.cov = log([ell; sf]);
-  likfunc = @likGauss; %sn = 0.1; hyp.lik = log(sn);
-
-hyp.cov = zeros(numBands+2,1); hyp.mean = []; hyp.lik = log(0.1);
-hyp = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, randPixels, randMoisture);
- 
-nlml = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, randPixels, randMoisture);
-
-%Testing Section
-%Initialize testing matrix containing all pixels not used in training
-testPix = totalPix - trainPix;
-test = zeros(testPix,1);
-u = 1;
-
-%Go through original pixel indexing matrix, add pixel to testing matrix
-%if it is not present in the indexing matrix
-for t = 1:totalPix
-    present = find(index==t);
-    if all(present == 0)
-        test(u) = t;
-        u = u + 1;
+for div = 1:8
+    kFolds = div; interval = trainPix/kFolds;
+    error = zeros(5,1);
+    hyp.cov = zeros(numBands+2,1); hyp.mean = []; hyp.lik = log(0.1);
+    meanfunc = []; %hyp.mean = [0.5; 1]; 
+    likfunc = @likGauss; %sn = 0.1; hyp.lik = log(sn);
+    
+    for smooth = 1:5
+    % Train a model using the random pixels and moisture content
+    covfunc = {@covSum, {{@covMaternard, smooth}, @covNoise}}; %ell = 1/4; sf = 1; hyp.cov = log([ell; sf]);
+    
+    for split = 1:kFolds
+        pixelTop = 1 + interval*(split - 1); pixelBottom = interval + interval*(split-1);
+        hyp = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, randPixels(pixelTop:pixelBottom,:), randMoisture(pixelTop:pixelBottom));
     end
+     
+    %nlml = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, randPixels, randMoisture);
+    
+    %Testing Section
+    %Initialize testing matrix containing all pixels not used in training
+    testPix = totalPix - trainPix;
+    test = zeros(testPix,1);
+    u = 1;
+    
+    %Go through original pixel indexing matrix, add pixel to testing matrix
+    %if it is not present in the indexing matrix
+    for t = 1:totalPix
+        present = find(index==t);
+        if all(present == 0)
+            test(u) = t;
+            u = u + 1;
+        end
+    end
+    
+    inputs = zeros(testPix,numBands); actualResult = zeros(testPix,1);
+    for c = 1:testPix
+        inputs(c,:) = signals(test(c),:);
+        actualResult(c) = moisture(test(c));
+    end
+    
+    [m s2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, randPixels, randMoisture, inputs);
+    
+    error(smooth) = rmse(actualResult, m);
+    end
+    
+    smallRMSE = min(error);
+    totalError(div) = smallRMSE;
 end
-
-inputs = zeros(testPix,numBands); actualResult = zeros(testPix,1);
-for c = 1:testPix
-    inputs(c,:) = signals(test(c),:);
-    actualResult(c) = moisture(test(c));
-end
-
-[m s2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, randPixels, randMoisture, inputs);
-
-error(smooth) = rmse(actualResult, m);
-end
-
-fprintf('Smallest RMSE: %f', min(error))
 
 %% Other Method for Comparison (Best model so far)
 
-Mdl = fitrgp(randPixels,randMoisture,'KernelFunction','ardexponential','FitMethod','sr');
-testResult = zeros(testPix,1);
-for a = 1:testPix
-    testResult(a) = predict(Mdl,signals(test(a),:));
-end
-
-errorRQ = rmse(actualResult,testResult);
+% Mdl = fitrgp(randPixels,randMoisture,'KernelFunction','ardexponential','FitMethod','sr');
+% testResult = zeros(testPix,1);
+% for a = 1:testPix
+%     testResult(a) = predict(Mdl,signals(test(a),:));
+% end
+% 
+% errorRQ = rmse(actualResult,testResult);
