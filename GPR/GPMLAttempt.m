@@ -30,7 +30,7 @@ totalError = zeros(1,8);
 
 %% Training Section
 for div = 1:8
-    kFolds = div; interval = trainPix/kFolds;
+    iter = div; interval = trainPix/iter;
     error = zeros(5,1);
     hyp.cov = zeros(numBands+2,1); hyp.mean = []; hyp.lik = log(0.1);
     meanfunc = []; %hyp.mean = [0.5; 1]; 
@@ -40,7 +40,7 @@ for div = 1:8
     % Train a model using the random pixels and moisture content
     covfunc = {@covSum, {{@covMaternard, smooth}, @covNoise}}; %ell = 1/4; sf = 1; hyp.cov = log([ell; sf]);
     
-    for split = 1:kFolds
+    for split = 1:iter
         pixelTop = 1 + interval*(split - 1); pixelBottom = interval + interval*(split-1);
         hyp = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, randPixels(pixelTop:pixelBottom,:), randMoisture(pixelTop:pixelBottom));
     end
