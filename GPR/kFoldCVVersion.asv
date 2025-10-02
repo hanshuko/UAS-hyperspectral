@@ -1,0 +1,109 @@
+clc; clear; close all;
+
+%Load data from CSV
+soilMoistureMatrix = readtable("soilmoisture_dataset.xlsx");
+
+%Split data into 2 matrices, one for hyperspectral bands by pixel and
+%one for moisture responses
+moisture = soilMoistureMatrix(2:end,3);
+signals = soilMoistureMatrix(2:end,5:end);
+moisture = table2array(moisture); signals = table2array(signals);
+
+%Parameters of matrices
+totalPix = length(moisture);
+numBands = length(signals(1,:));
+
+%% Indexing Section
+%Divide data into 10 random folds 
+numFolds = 10;
+folds = cvpartition(totalPix,"KFold",numFolds);
+
+foldErr = zeros(1,numFolds);
+
+%Find indexes of each group
+for grp = 1:numFolds
+    idxTrain = training(folds,grp);
+    idxTest = test(folds,grp);
+
+%Determine lengths of train and test sets
+numTrain = sum(idxTrain);
+numTest = sum(idxTest);
+
+%Extract random pixels and their corresponding moisture content into their 
+%own matrix
+trainSetPix = zeros(numTrain,numBands); trainSetMoist = zeros(numTrain,1);
+testSetPix = zeros(numTest,numBands); testSetMoist = zeros(numTest,1);
+p = 0; q = 0;
+for s = 1:totalPix
+    if idxTrain(s) == true
+        p = p + 1;
+        trainSetPix(p,:) = signals(idxTrain(s),:);
+        trainSetMoist(p) = moisture(idxTrain(s));
+    end
+
+    if idxTest == true
+        q = q + 1;
+        testSetPix(q,:) = signals(idxTest(s),:);
+        testSetMoist(q) = moisture(idxTest(s));
+    end
+end
+
+totalError = zeros(1,8);
+
+%% Training Section
+for div = 1:8
+    iter = div; interval = numTrain/iter;
+    error = zeros(5,1);
+    hyp.cov = zeros(numBands+2,1); hyp.mean = []; hyp.lik = log(0.1);
+    meanfunc = []; %hyp.mean = [0.5; 1]; 
+    likfunc = @likGauss; %sn = 0.1; hyp.lik = log(sn);
+    
+    for smooth = 1:5
+    % Train a model using the random pixels and moisture content
+    covfunc = {@covSum, {{@covMaternard, smooth}, @covNoise}}; %ell = 1/4; sf = 1; hyp.cov = log([ell; sf]);
+    
+    for split = 1:iter
+        pixelTop = 1 + interval*(split - 1); pixelBottom = interval + interval*(split-1);
+        hyp = minimize(hyp, @gp, -100, @infGaussLik, meanfunc, covfunc, likfunc, trainSetPix(pixelTop:pixelBottom,:), trainSetMoist(pixelTop:pixelBottom));
+    end
+     
+    %nlml = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, randPixels, randMoisture);
+    
+    % inputs = zeros(numTest,numBands); actualResult = zeros(numTest,1);
+    % for c = 1:numTest
+    %     inputs(c,:) = signals(test(c),:);
+    %     actualResult(c) = moisture(test(c));
+    % end
+    
+    [m s2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, trainSetPix, trainSetMoist, inputs);
+    
+    error(smooth) = rmse(actualResult, m);
+    end
+    
+    smallRMSE = min(error);
+    totalError(div) = smallRMSE;
+end
+
+foldErr(grp) = min(totalError);
+end
+
+finalErr = mean(foldErr);
+
+
+
+
+
+
+
+
+
+
+%% Other Method for Comparison (Best model so far)
+
+% Mdl = fitrgp(randPixels,randMoisture,'KernelFunction','ardexponential','FitMethod','sr');
+% testResult = zeros(testPix,1);
+% for a = 1:testPix
+%     testResult(a) = predict(Mdl,signals(test(a),:));
+% end
+% 
+% errorRQ = rmse(actualResult,testResult);
