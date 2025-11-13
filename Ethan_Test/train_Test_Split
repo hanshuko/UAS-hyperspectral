@@ -1,0 +1,32 @@
+import pandas as pd
+import scipy.io as sio
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split 
+import sklearn.gaussian_process as gp
+
+#Loading In Data
+Bands = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Bands.mat')
+Signals = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+
+#Extracting Out Data
+Bands = Bands[list(Bands.keys())[-1]].squeeze()
+X = Signals[list(Signals.keys())[-1]].T
+Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].squeeze()
+
+#Split into train-test
+numQuantiles = 5
+quants = pd.qcut(Y, q=numQuantiles, labels=False)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, stratify=quants, random_state=25)
+
+#Train gaussian process for fun
+gp.GaussianProcessRegressor().fit(X_train,Y_train)
+
+#Plot different groups to ensure distribution is enforced
+plt.grid(True,axis='y',zorder=1)
+plt.hist(Y_train,bins=10,edgecolor='black',zorder=2)
+plt.xlabel('FMC')
+plt.ylabel('Number of Occurrences')
+plt.title('Data Distribution')
+plt.show()
+
