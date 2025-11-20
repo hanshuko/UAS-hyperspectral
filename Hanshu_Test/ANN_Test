@@ -1,0 +1,34 @@
+
+# Import scikit-learn libraries
+import scipy.io as sio
+from sklearn import linear_model
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPRegressor
+
+# Import other libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+# Load data
+Bands = sio.loadmat('../ML_Data/Bands.mat')
+Signals = sio.loadmat('../ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('../ML_Data/Moisture_Percentage.mat')
+
+Bands = Bands[list(Bands.keys())[-1]].T
+X = Signals[list(Signals.keys())[-1]].T
+Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].T
+
+# Split into training and testing sets (80/20)
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.2, random_state=42
+)
+
+# K fold validation
+from sklearn.model_selection import KFold
+
+
+
+
+
