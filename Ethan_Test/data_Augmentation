@@ -1,4 +1,9 @@
 import scipy.io as sio
+import numpy as np
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from sklearn import linear_model
 
 #Loading In Data
 Bands = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Bands.mat')
@@ -9,3 +14,54 @@ Moisture_Percentage = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Moisture_Percen
 Bands = Bands[list(Bands.keys())[-1]].squeeze()
 X = Signals[list(Signals.keys())[-1]].T
 Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].squeeze()
+
+#Double data set size by injecting noise
+def add_noise(x, sigma_frac=0.01):
+    sigma = sigma_frac*np.std(x)
+    return x + np.random.normal(0, sigma, size=x.shape)
+
+#Split into training and testing sets (80/20)
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.2, random_state=42
+)
+
+#Produce additional data
+X_train2 = add_noise(X_train)
+
+#Append additional data to original training data set
+X_train = np.append(X_train,X_train2)
+Y_train = np.append(Y_train,Y_train)
+print(X_train)
+print(Y_train)
+
+#Create and fit regression model
+reg = linear_model.LinearRegression()
+reg.fit(X_train, Y_train)
+
+#Predict on both train and test sets
+Y_train_pred = reg.predict(X_train)
+Y_test_pred = reg.predict(X_test)
+
+#Evaluate model
+r2_train = r2_score(Y_train, Y_train_pred)
+r2_test = r2_score(Y_test, Y_test_pred)
+mse_train = mean_squared_error(Y_train, Y_train_pred)
+mse_test = mean_squared_error(Y_test, Y_test_pred)
+
+#Print Results
+print("Training R^2:", r2_train)
+print("Testing R^2:", r2_test)
+print("Training MSE:", mse_train)
+print("Testing MSE:", mse_test)
+
+#Plotting Results
+plt.figure(figsize=(10, 6))
+plt.plot(Y_test, 'o-', label='Actual Moisture', markersize=6)
+plt.plot(Y_test_pred, 's--', label='Predicted Moisture', markersize=6)
+plt.xlabel('Sample Index')
+plt.ylabel('Moisture Percentage')
+plt.title('Predicted vs Actual Moisture on Test Set')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
