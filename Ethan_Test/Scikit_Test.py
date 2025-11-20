@@ -5,9 +5,9 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
 #Loading In Data
-Bands = sio.loadmat('../UAS-hyperspectral/ML_Data/Bands.mat')
-Signals = sio.loadmat('../UAS-hyperspectral/ML_Data/Signals.mat')
-Moisture_Percentage = sio.loadmat('../UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+Bands = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Bands.mat')
+Signals = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
 #Extracting Out Data
 Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T

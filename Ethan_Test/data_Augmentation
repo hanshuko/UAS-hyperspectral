@@ -1,0 +1,11 @@
+import scipy.io as sio
+
+#Loading In Data
+Bands = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Bands.mat')
+Signals = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+
+#Extracting Out Data
+Bands = Bands[list(Bands.keys())[-1]].squeeze()
+X = Signals[list(Signals.keys())[-1]].T
+Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].squeeze()
