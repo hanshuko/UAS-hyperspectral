@@ -20,13 +20,29 @@ quants = pd.qcut(Y, q=numQuantiles, labels=False)
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, stratify=quants, random_state=25)
 
 #Train gaussian process for fun
-gp.GaussianProcessRegressor().fit(X_train,Y_train)
+gpr = gp.GaussianProcessRegressor().fit(X_train,Y_train)
+score = gpr.score(X_train,Y_train)
+print(score)
 
 #Plot different groups to ensure distribution is enforced
+plt.figure(1)
+plt.hist(Y,bins=10,edgecolor='black')
+plt.xlabel('FMC')
+plt.ylabel('Number of Occurrences')
+plt.title('Overall Data Distribution')
+
+plt.figure(2)
+plt.grid(True,axis='y',zorder=1)
+plt.hist(Y_test,bins=10,edgecolor='black',zorder=2)
+plt.xlabel('FMC')
+plt.ylabel('Number of Occurrences')
+plt.title('Test Data Distribution')
+
+plt.figure(3)
 plt.grid(True,axis='y',zorder=1)
 plt.hist(Y_train,bins=10,edgecolor='black',zorder=2)
 plt.xlabel('FMC')
 plt.ylabel('Number of Occurrences')
-plt.title('Data Distribution')
+plt.title('Training Data Distribution')
 plt.show()
 

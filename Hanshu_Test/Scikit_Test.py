@@ -1,13 +1,20 @@
+print('Hello world')
+
+
 import scipy.io as sio
+
+exit()
 from sklearn import linear_model
+
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
+
 #Loading In Data
-Bands = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Bands.mat')
-Signals = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Signals.mat')
-Moisture_Percentage = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+Bands = sio.loadmat('../ML_Data/Bands.mat')
+Signals = sio.loadmat('../ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('../ML_Data/Moisture_Percentage.mat')
 #Extracting Out Data
 Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T
@@ -25,7 +32,7 @@ reg.fit(X_train, Y_train)
 #Predict on both train and test sets
 Y_train_pred = reg.predict(X_train)
 Y_test_pred = reg.predict(X_test)
-
+#Test Comment
 #Evaluate model
 r2_train = r2_score(Y_train, Y_train_pred)
 r2_test = r2_score(Y_test, Y_test_pred)
