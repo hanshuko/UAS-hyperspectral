@@ -16,6 +16,7 @@ from sklearn.linear_model import LinearRegression
 #-Ethan Royse
 #-Hanshu Kotta
 #-Marc Wannawitchate
+#-Caue Faria
 
 
 
