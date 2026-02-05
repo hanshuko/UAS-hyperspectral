@@ -41,7 +41,7 @@ reg.fit(X_train, Y_train)
 #Predict on both train and test sets
 Y_train_pred = reg.predict(X_train)
 Y_test_pred = reg.predict(X_test)
-#Test Comment
+
 #Evaluate model
 r2_train = r2_score(Y_train, Y_train_pred)
 r2_test = r2_score(Y_test, Y_test_pred)
