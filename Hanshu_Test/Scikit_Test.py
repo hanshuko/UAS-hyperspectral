@@ -2,13 +2,10 @@ print('Hello world')
 
 
 import scipy.io as sio
-
-exit()
 from sklearn import linear_model
 
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
-import numpy as np
 import matplotlib.pyplot as plt
 
 #Loading In Data
