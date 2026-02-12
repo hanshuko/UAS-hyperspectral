@@ -1,13 +1,14 @@
 import scipy.io as sio
-from sklearn import linear_model
+from sklearn import linear_model, cross_decomposition, ensemble
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
 #Loading In Data
-Bands = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Bands.mat')
-Signals = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Signals.mat')
-Moisture_Percentage = sio.loadmat('UAs/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+Bands = sio.loadmat('UAS-hyperspectral/ML_Data/Bands.mat')
+Signals = sio.loadmat('UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+
 #Extracting Out Data
 Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T
@@ -18,8 +19,11 @@ X_train, X_test, Y_train, Y_test = train_test_split(
     X, Y, test_size=0.2, random_state=42
 )
 
+#Create convex combinations to produce new data
+
+
 #Create and fit regression model
-reg = linear_model.LinearRegression()
+reg = cross_decomposition.PLSRegression()
 reg.fit(X_train, Y_train)
 
 #Predict on both train and test sets
