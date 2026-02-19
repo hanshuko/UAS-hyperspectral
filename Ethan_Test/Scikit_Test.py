@@ -4,10 +4,12 @@ from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
+from pysptools import eea, material_count
+
 #Loading In Data
-Bands = sio.loadmat('UAS-hyperspectral/ML_Data/Bands.mat')
-Signals = sio.loadmat('UAS-hyperspectral/ML_Data/Signals.mat')
-Moisture_Percentage = sio.loadmat('UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+Bands = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Bands.mat')
+Signals = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
 
 #Extracting Out Data
 Bands = Bands[list(Bands.keys())[-1]].T
@@ -19,21 +21,49 @@ X_train, X_test, Y_train, Y_test = train_test_split(
     X, Y, test_size=0.2, random_state=42
 )
 
-#Create convex combinations to produce new data
+#Find endmembers
+X3d = X.reshape(7,12,300)
+dims = material_count.vd.HfcVd(X)
+nfindr = eea.NFINDR()
+mem = nfindr.extract(X3d, dims[0])
 
+#Establish function to create 50 new convex pairs
+def ConvexMixWithLabels(X, y, nNew=500):
+    n = X.shape[0]
+    XNew = []
+    YNew = []
+    
+    for _ in range(nNew):
+        i, j = np.random.choice(n, 2, replace=False)
+        alpha = np.random.rand()
+        
+        x_new = alpha * X[i] + (1 - alpha) * X[j]
+        y_new_sample = alpha * y[i] + (1 - alpha) * y[j]
+        
+        XNew.append(x_new)
+        YNew.append(y_new_sample)
+        
+    return np.array(XNew), np.array(YNew)
+
+#Create new pairs
+XNew, YNew = ConvexMixWithLabels(X,Y)
+
+#Append new data to training set
+XTrainNew = np.append(X_train,XNew,axis=0)
+YTrainNew = np.append(Y_train,YNew)
 
 #Create and fit regression model
 reg = cross_decomposition.PLSRegression()
-reg.fit(X_train, Y_train)
+reg.fit(XTrainNew, YTrainNew)
 
 #Predict on both train and test sets
-Y_train_pred = reg.predict(X_train)
+Y_train_pred = reg.predict(XTrainNew)
 Y_test_pred = reg.predict(X_test)
 
 #Evaluate model
-r2_train = r2_score(Y_train, Y_train_pred)
+r2_train = r2_score(YTrainNew, Y_train_pred)
 r2_test = r2_score(Y_test, Y_test_pred)
-mse_train = mean_squared_error(Y_train, Y_train_pred)
+mse_train = mean_squared_error(YTrainNew, Y_train_pred)
 mse_test = mean_squared_error(Y_test, Y_test_pred)
 
 #Print Results
