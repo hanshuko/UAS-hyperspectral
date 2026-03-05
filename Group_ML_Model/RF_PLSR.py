@@ -5,6 +5,24 @@ from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+
+## SMOOTHING FUNCTION
+def spectral_preprocessing(X, use_savgol=False, window_length=11, polyorder=2, deriv=0):
+
+    if use_savgol:
+        X = savgol_filter(
+            X,
+            window_length=window_length,
+            polyorder=polyorder,
+            deriv=deriv,
+            axis=1
+        )
+        print(f"Savitzky-Golay applied | window={window_length}, poly={polyorder}, deriv={deriv}")
+    else:
+        print("No spectral preprocessing applied")
+
+    return X
 
 ## LINEAR REGRESSION MODEL
 #Loading In Data
@@ -18,6 +36,9 @@ Moisture_Percentage = sio.loadmat(os.path.join(DATA_DIR, "Moisture_Percentage.ma
 Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T
 Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].T
+
+## APPLY PREPROCESSING
+X = spectral_preprocessing(X, use_savgol=False, window_length=11, polyorder=2, deriv=1)
 
 #Split into training and testing sets (80/20)
 X_train, X_test, Y_train, Y_test = train_test_split(
