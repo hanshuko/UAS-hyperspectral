@@ -28,7 +28,7 @@ nfindr = eea.NFINDR()
 mem = nfindr.extract(X3d, dims[0])
 
 #Establish function to create 50 new convex pairs
-def ConvexMixWithLabels(X, y, nNew=500):
+def ConvexMixWithLabels(X, y, nNew=50):
     n = X.shape[0]
     XNew = []
     YNew = []
