@@ -59,9 +59,15 @@ plt.show()
 n_samples, n_bands = X.shape
 correlations = np.zeros(n_bands)
 
+#Perform PCA
+pca = PCA(n_components=10)
+X_pca = pca.fit_transform(X)
+
 #Calculate correlation coefficient between each signal and moisture at each band
-for i in range(n_bands):
-    correlations[i] = np.corrcoef(X[:, i].flatten(), Y.flatten())[0, 1]
+for i in range(10):
+    correlations[i] = np.corrcoef(X_pca[:, i].flatten(), Y.flatten())[0, 1]
+
+best_pcs = np.argsort(np.abs(correlations))[::-1][:3]
 
 #Make smoothed version of correlations
 window = 7
@@ -69,33 +75,10 @@ smooth_corr = np.convolve(correlations, np.ones(window)/window, mode='same')
 
 #Plot relationship
 plt.figure()
-plt.plot(Bands,correlations, alpha=0.5)
-plt.plot(Bands,smooth_corr, linewidth=2)
-plt.xlabel('Wavelength')
+plt.plot(correlations, alpha=0.5)
+plt.plot(smooth_corr, linewidth=2)
+plt.xlabel('Band Index')
 plt.ylabel('Correlation with Moisture')
 plt.title('Band-Wise Linear Correlation')
 plt.legend(['Unsmoothed','Smoothed'])
 plt.show()
-
-### Run PLS and see which bands it keeps
-#Create model - use pipeline to prevent data leakage
-pipeline = Pipeline([
-    ("scale", StandardScaler()),
-    ("pls", PLSRegression(n_components=2))
-])
-
-#Cross-evaluate
-cv = KFold(n_splits=5, shuffle=True, random_state=0)
-r2Scores = cross_val_score(pipeline,X,Y, cv=cv, scoring='r2')
-rmseScores = cross_val_score(pipeline,X,Y, cv=cv, scoring='neg_root_mean_squared_error')
-score, perm_scores, pvalue = permutation_test_score(pipeline, X, Y,scoring="r2",cv=5,n_permutations=1000,n_jobs=-1)
-
-#Print Results
-print("R^2 scores: ", r2Scores)
-print("Mean R^2: ", r2Scores.mean())
-print("R^2 Std: ", r2Scores.std())
-print("RMSE scores: ", rmseScores)
-print("Mean RMSE: ", rmseScores.mean())
-print("RMSE Std: ", rmseScores.std())
-print("Permutation Test R^2: ", score)
-print("Permutation Test P-Value: ", pvalue)
