@@ -3,6 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.model_selection import cross_val_score, KFold, permutation_test_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 #Loading In Data
 Bands = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Bands.mat')
@@ -44,7 +48,7 @@ sm.set_array([])
 plt.colorbar(sm, ax=ax, label="Moisture Content")
 
 #Create plot
-plt.xlabel("Band Index")
+plt.xlabel("Wavelength (nm)")
 plt.ylabel("Reflectance")
 plt.title('Moisture Content Organization')
 plt.show()
@@ -54,16 +58,46 @@ plt.show()
 n_samples, n_bands = X.shape
 correlations = np.zeros(n_bands)
 
+#var1 = X[:,1].reshape(-1,1)
+
+
 #Calculate correlation coefficient between each signal and moisture at each band
 for i in range(n_bands):
-    correlations[i] = np.corrcoef(X[:, i], Y)[0, 1]
+    correlations[i] = np.corrcoef(X[:, i].flatten(), Y.flatten())[0, 1]
+
+#Make smoothed version of correlations
+window = 7
+smooth_corr = np.convolve(correlations, np.ones(window)/window, mode='same')
 
 #Plot relationship
 plt.figure()
-plt.plot(range(n_bands), correlations)
+plt.plot(correlations, alpha=0.5)
+plt.plot(smooth_corr, linewidth=2)
 plt.xlabel('Band Index')
 plt.ylabel('Correlation with Moisture')
-plt.title('Band-Wise Correlation')
+plt.title('Band-Wise Linear Correlation')
+plt.legend(['Unsmoothed','Smoothed'])
 plt.show()
 
+### Run PLS and see which bands it keeps
+#Create model - use pipeline to prevent data leakage
+pipeline = Pipeline([
+    ("scale", StandardScaler()),
+    ("pls", PLSRegression(n_components=2))
+])
 
+#Cross-evaluate
+cv = KFold(n_splits=5, shuffle=True, random_state=0)
+r2Scores = cross_val_score(pipeline,X,Y, cv=cv, scoring='r2')
+rmseScores = cross_val_score(pipeline,X,Y, cv=cv, scoring='neg_root_mean_squared_error')
+score, perm_scores, pvalue = permutation_test_score(pipeline, X, Y,scoring="r2",cv=5,n_permutations=1000,n_jobs=-1)
+
+#Print Results
+print("R^2 scores: ", r2Scores)
+print("Mean R^2: ", r2Scores.mean())
+print("R^2 Std: ", r2Scores.std())
+print("RMSE scores: ", rmseScores)
+print("Mean RMSE: ", rmseScores.mean())
+print("RMSE Std: ", rmseScores.std())
+print("Permutation Test R^2: ", score)
+print("Permutation Test P-Value: ", pvalue)
