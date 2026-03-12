@@ -12,15 +12,12 @@ from sklearn.preprocessing import StandardScaler,PolynomialFeatures
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.linear_model import LinearRegression
 
-#Loading In Data
-Bands = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Bands.mat')
-Signals = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Signals.mat')
-Moisture_Percentage = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+# Load Data
+Signals = sio.loadmat('../ML_Data/Signals.mat')
+Moisture = sio.loadmat('../ML_Data/Moisture_Percentage.mat')
 
-#Extracting Out Data
-Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T
-Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].T
+Y = Moisture[list(Moisture.keys())[-1]].T
 
 #Split into training and testing sets (80/20)
 X_train, X_test, Y_train, Y_test = train_test_split(
