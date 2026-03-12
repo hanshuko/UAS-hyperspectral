@@ -40,7 +40,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(
 )
 
 #Establish function to create 50 new convex pairs
-def ConvexMixWithLabels(X, y, nNew=50,moisture_window=0.1):
+def ConvexMixWithLabels(X, y, nNew=50, moisture_window=0.1):
     n = X.shape[0]
     XNew = []
     YNew = []
@@ -70,7 +70,7 @@ def ConvexMixWithLabels(X, y, nNew=50,moisture_window=0.1):
     return np.array(XNew), np.array(YNew)
 
 #Create new pairs
-XNew, YNew = ConvexMixWithLabels(X,Y)
+XNew, YNew = ConvexMixWithLabels(X_train,Y_train)
 
 #Append new data to training set
 XTrainNew = np.append(X_train,XNew,axis=0)
