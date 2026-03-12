@@ -1,6 +1,7 @@
-
+from sklearn.decomposition import PCA
+from scipy.stats import pearsonr
 import scipy.io as sio
-import os
+import numpy as np
 from sklearn import linear_model
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
@@ -11,24 +12,11 @@ from sklearn.preprocessing import StandardScaler,PolynomialFeatures
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.linear_model import LinearRegression
 
-##Comment your name below
-#-Grant Mirka
-#-Ethan Royse
-#-Hanshu Kotta
-#-Marc Wannawitchate
-#-Caue Faria
-#-AHyeong Kim
-
-
-##
-
 #Loading In Data
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "..", "ML_Data")
+Bands = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Bands.mat')
+Signals = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture_Percentage = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
 
-Bands = sio.loadmat(os.path.join(DATA_DIR, "Bands.mat"))
-Signals = sio.loadmat(os.path.join(DATA_DIR, "Signals.mat"))
-Moisture_Percentage = sio.loadmat(os.path.join(DATA_DIR, "Moisture_Percentage.mat"))
 #Extracting Out Data
 Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T
@@ -39,13 +27,20 @@ X_train, X_test, Y_train, Y_test = train_test_split(
     X, Y, test_size=0.2, random_state=42
 )
 
-#Establish function to create 50 new convex pairs
-def ConvexMixWithLabels(X, y, nNew=50,moisture_window=0.1):
-    n = X.shape[0]
-    XNew = []
-    YNew = []
-    
-    for q in range(nNew):
+#X: Shape (84,300), y: Moisture
+pca = PCA(n_components=10)
+X_pca = pca.fit_transform(X)
+
+#Find which PCs correlate most with moisture
+corrs = [pearsonr(X_pca[:,i].flatten(),Y.flatten())[0] for i in range(X_pca.shape[1])]
+best_pcs = np.argsort(np.abs(corrs))[::-1]   #Descending order
+
+def convex_mix_pca(X_pca, y, pca_model, n_new=500, top_pcs=[1,2,4], moisture_window=0.05):
+    n = X_pca.shape[0]
+    X_new = []
+    y_new = []
+
+    for _ in range(n_new):
         if moisture_window is None:
             i, j = np.random.choice(n, 2, replace=False)
         else:
@@ -58,26 +53,34 @@ def ConvexMixWithLabels(X, y, nNew=50,moisture_window=0.1):
                 continue
 
             j = np.random.choice(valid)
-
+        
         alpha = np.random.rand()
         
-        x_new = alpha * X[i] + (1 - alpha) * X[j]
+        # Mix only top PCs
+        mix_pcs = np.zeros(X_pca.shape[1])
+        mix_pcs[top_pcs] = alpha * X_pca[i, top_pcs] + (1 - alpha) * X_pca[j, top_pcs]
+        
+        # Keep the other PCs as the mean (or zero if centered)
+        other_pcs = np.setdiff1d(np.arange(X_pca.shape[1]), top_pcs)
+        mix_pcs[other_pcs] = 0  # or np.mean(X_pca[:, other_pcs], axis=0)
+        
+        # Inverse transform to original spectrum
+        x_new = pca_model.inverse_transform(mix_pcs)
         y_new_sample = alpha * y[i] + (1 - alpha) * y[j]
-        
-        XNew.append(x_new)
-        YNew.append(y_new_sample)
-        
-    return np.array(XNew), np.array(YNew)
 
-#Create new pairs
-XNew, YNew = ConvexMixWithLabels(X,Y)
+        X_new.append(x_new)
+        y_new.append(y_new_sample)
+        
+    return np.array(X_new), np.array(y_new)
+
+XNew, YNew = convex_mix_pca(X_pca,Y,pca)
 
 #Append new data to training set
 XTrainNew = np.append(X_train,XNew,axis=0)
 YTrainNew = np.append(Y_train,YNew)
 
 #Create and fit regression model
-reg = LinearRegression()
+reg = PLSRegression(n_components=2)
 reg.fit(XTrainNew, YTrainNew)
 
 #Predict on both train and test sets
@@ -107,5 +110,3 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
-
