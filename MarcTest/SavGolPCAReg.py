@@ -81,13 +81,13 @@ def test_poly_model(degree):
     plt.show()
 
     # Optional: fold score bar plot
-    plt.figure(figsize=(6, 4))
-    plt.bar(range(1, len(cv_scores) + 1), cv_scores)
-    plt.xlabel("Fold")
-    plt.ylabel("R² Score")
-    plt.title(f"CV Fold R² Scores (Degree {degree})")
-    plt.grid(True)
-    plt.show()
+    #plt.figure(figsize=(6, 4))
+    #plt.bar(range(1, len(cv_scores) + 1), cv_scores)
+    #plt.xlabel("Fold")
+    #plt.ylabel("R² Score")
+    #plt.title(f"CV Fold R² Scores (Degree {degree})")
+    #plt.grid(True)
+    #plt.show()
 
 # Test linear, quadratic, cubic
 test_poly_model(1)
