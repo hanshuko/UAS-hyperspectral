@@ -8,14 +8,12 @@ from sklearn.preprocessing import StandardScaler
 
 
 #Loading In Data
-Bands = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Bands.mat')
-Signals = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Signals.mat')
-Moisture_Percentage = sio.loadmat('C:/Users/eroys/OneDrive/Documents/GitHub/UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
+# Load Data
+Signals = sio.loadmat('../ML_Data/Signals.mat')
+Moisture = sio.loadmat('../ML_Data/Moisture_Percentage.mat')
 
-#Extracting Out Data
-Bands = Bands[list(Bands.keys())[-1]].T
 X = Signals[list(Signals.keys())[-1]].T
-Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].T
+Y = Moisture[list(Moisture.keys())[-1]].T
 
 #Perform filtering
 

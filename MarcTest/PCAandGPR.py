@@ -25,7 +25,7 @@ Y = Moisture_Percentage[list(Moisture_Percentage.keys())[-1]].T.ravel()
 
 # Split into training and testing sets
 X_train, X_test, Y_train, Y_test = train_test_split(
-    X, Y, test_size=0.2, random_state=42
+    X, Y, test_size=0.3, random_state=42
 )
 
 # Optional convex mixing on TRAINING ONLY
@@ -47,7 +47,7 @@ def ConvexMixWithLabels(X, y, nNew=50, random_state=42):
 
     return np.array(XNew), np.array(YNew)
 
-use_mix = True
+use_mix = False
 if use_mix:
     XNew, YNew = ConvexMixWithLabels(X_train, Y_train, nNew=50, random_state=42)
     X_train_final = np.concatenate([X_train, XNew], axis=0)
@@ -62,7 +62,7 @@ X_train_scaled = scaler.fit_transform(X_train_final)
 X_test_scaled = scaler.transform(X_test)
 
 # PCA
-n_components = 5
+n_components = 4
 pca = PCA(n_components=n_components)
 X_train_pca = pca.fit_transform(X_train_scaled)
 X_test_pca = pca.transform(X_test_scaled)

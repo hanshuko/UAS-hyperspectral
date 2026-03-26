@@ -26,7 +26,7 @@ X_pca = pca.fit_transform(X_scaled)
 print("Explained variance:", pca.explained_variance_ratio_.sum())
 
 # Train/Test split
-X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
 
 # Function to evaluate polynomial regression
 def test_poly_model(degree):
@@ -79,7 +79,7 @@ def test_poly_model(degree):
 # Test linear, quadratic, cubic
 test_poly_model(1)
 test_poly_model(2)
-#test_poly_model(3)
+test_poly_model(3)
 # PCA Explained Variance Plot
 #plt.figure(figsize=(6,4))
 #plt.bar(range(1,4), pca.explained_variance_ratio_*100)

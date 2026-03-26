@@ -3,12 +3,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scipy.signal import savgol_filter
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Ridge
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 
 # Loading In Data
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -56,40 +55,42 @@ else:
     X_train_final = X_train
     Y_train_final = Y_train
 
-# Savitzky-Golay preprocessing
-window_length = 11
-polyorder = 2
-deriv = 0
+# SNV preprocessing
+def snv(X):
+    row_std = X.std(axis=1, keepdims=True)
+    row_std[row_std == 0] = 1.0
+    return (X - X.mean(axis=1, keepdims=True)) / row_std
 
-X_train_sg = savgol_filter(
-    X_train_final, window_length=window_length, polyorder=polyorder, deriv=deriv, axis=1
-)
-X_test_sg = savgol_filter(
-    X_test, window_length=window_length, polyorder=polyorder, deriv=deriv, axis=1
-)
+X_train_prep = snv(X_train_final)
+X_test_prep = snv(X_test)
 
 # Scale before PCA
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train_sg)
-X_test_scaled = scaler.transform(X_test_sg)
+X_train_scaled = scaler.fit_transform(X_train_prep)
+X_test_scaled = scaler.transform(X_test_prep)
 
 # PCA
-n_components = 5
+n_components = 4
 pca = PCA(n_components=n_components)
-X_train_pca = pca.fit_transform(X_train_scaled)
-X_test_pca = pca.transform(X_test_scaled)
+X_train_features = pca.fit_transform(X_train_scaled)
+X_test_features = pca.transform(X_test_scaled)
 
 print(f"PCA ON | n_components = {n_components}")
-print(f"SG ON | window_length = {window_length}, polyorder = {polyorder}, deriv = {deriv}")
+print("Preprocessing: SNV")
 
-# Ridge regression
-alpha = 0.1
-reg = Ridge(alpha=alpha)
-reg.fit(X_train_pca, Y_train_final)
+# Polynomial feature expansion
+degree = 2
+poly = PolynomialFeatures(degree=degree, include_bias=False)
+X_train_poly = poly.fit_transform(X_train_features)
+X_test_poly = poly.transform(X_test_features)
+
+# Apply linear regression
+reg = LinearRegression()
+reg.fit(X_train_poly, Y_train_final)
 
 # Predict
-Y_train_pred = reg.predict(X_train_pca)
-Y_test_pred = reg.predict(X_test_pca)
+Y_train_pred = reg.predict(X_train_poly)
+Y_test_pred = reg.predict(X_test_poly)
 
 # Metrics
 r2_train = r2_score(Y_train_final, Y_train_pred)
@@ -111,7 +112,7 @@ plt.plot(Y_test, 'o-', label='Actual Moisture', markersize=6)
 plt.plot(Y_test_pred, 's--', label='Predicted Moisture', markersize=6)
 plt.xlabel('Sample Index')
 plt.ylabel('Moisture Percentage')
-plt.title('SG + PCA + Ridge: Predicted vs Actual Moisture on Test Set')
+plt.title('SNV + PCA + Polynomial Linear Regression')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
@@ -125,7 +126,7 @@ max_val = max(Y_test.max(), Y_test_pred.max())
 plt.plot([min_val, max_val], [min_val, max_val], 'r--', label="Ideal Fit")
 plt.xlabel("Actual FMC")
 plt.ylabel("Predicted FMC")
-plt.title("SG + PCA + Ridge: Predicted vs Actual")
+plt.title("SNV + PCA + Polynomial Linear Regression")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
