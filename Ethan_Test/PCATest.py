@@ -15,9 +15,11 @@ from sklearn.linear_model import LinearRegression
 import itertools
 import seaborn as sns
 
+## LOOK INTO FINDING OUTLIERS FROM POORLY PERFORMING CV FOLDS AND REMOVING THEM TO SEE IF IT IMPROVES PERFORMANCE
+
 # Load Data
-Signals = sio.loadmat('ML_Data/Signals.mat')
-Moisture = sio.loadmat('ML_Data/Moisture_Percentage.mat')
+Signals = sio.loadmat('UAS-hyperspectral/ML_Data/Signals.mat')
+Moisture = sio.loadmat('UAS-hyperspectral/ML_Data/Moisture_Percentage.mat')
 
 X = Signals[list(Signals.keys())[-1]].T
 Y = Moisture[list(Moisture.keys())[-1]].T
@@ -79,17 +81,17 @@ def evaluate_pipeline(X, Y, n_components, moisture_window, alpha,
         X_train, X_test = X[train_idx], X[test_idx]
         Y_train, Y_test = Y[train_idx], Y[test_idx]
 
-        # --- PCA (fit ONLY on training data) ---
+        #PCA (fit ONLY on training data)
         pca = PCA(n_components=n_components)
         X_train_pca = pca.fit_transform(X_train)
         X_test_pca = pca.transform(X_test)
 
-        # --- Find best PCs ---
+        #Find best PCs
         corrs = [pearsonr(X_train_pca[:,i].flatten(),Y_train.flatten())[0] 
                  for i in range(X_train_pca.shape[1])]
         top_pcs = np.argsort(np.abs(corrs))[::-1][:3]  # take top 3
 
-        # --- Generate augmented data ---
+        #Generate augmented data
         X_new, Y_new = convex_mix_pca(
             X_train_pca,
             Y_train,
@@ -100,15 +102,15 @@ def evaluate_pipeline(X, Y, n_components, moisture_window, alpha,
             alpha=alpha
         )
 
-        # Combine
+        #Combine
         X_train_aug = np.vstack([X_train, X_new])
         Y_train_aug = np.vstack([Y_train, Y_new])
 
-        # --- Train model ---
+        #Train model
         reg = PLSRegression(n_components=2)
         reg.fit(X_train_aug, Y_train_aug)
 
-        # --- Evaluate ---
+        #Evaluate
         Y_pred = reg.predict(X_test)
         r2_scores.append(r2_score(Y_test, Y_pred))
 
