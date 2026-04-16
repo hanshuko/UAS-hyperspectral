@@ -118,8 +118,8 @@ def evaluate_pipeline(X, Y, n_components, moisture_window, alpha,
 
 #Define the grid search
 param_grid = {
-    "n_components": [5, 10, 20],
-    "moisture_window": [0.02, 0.05, 0.1],
+    "n_components": [1, 2, 3,4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    "moisture_window": [0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2],
     "alpha": [0.2, 0.5, 0.8]
 }
 
@@ -163,7 +163,7 @@ pivot = subset.pivot(index="moisture_window",
                      columns="n_components",
                      values="mean_r2")
 
-sns.heatmap(pivot, annot=True, cmap="viridis")
+sns.heatmap(pivot, annot=False, cmap="viridis")
 plt.title(f"R² Heatmap (alpha={alpha_val})")
 plt.show()
 
