@@ -2,11 +2,12 @@ import os
 import numpy as np
 import scipy.io as sio
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.linear_model import ElasticNet
+from sklearn.metrics import mean_squared_error
 
 
 def load_last_mat_variable(mat_dict):
@@ -14,22 +15,6 @@ def load_last_mat_variable(mat_dict):
     if len(keys) == 0:
         raise ValueError("No valid data keys found in .mat file.")
     return mat_dict[keys[-1]]
-
-
-def evaluate_model(name, model, X_train, X_test, y_train, y_test):
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-
-    r2 = r2_score(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
-    rmse = np.sqrt(mse)
-
-    print(name)
-    print(f"  Testing R^2: {r2:.4f}")
-    print(f"  Testing RMSE: {rmse:.6f}")
-    print("-" * 40)
-
-    return r2, rmse
 
 
 def main():
@@ -47,47 +32,46 @@ def main():
     print("y shape:", y.shape)
     print("-" * 40)
 
-    # Scale first
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    # Pipeline (prevent leakage)
+    pipeline = Pipeline([
+        ("scaler", StandardScaler()),
+        ("pca", PCA()),
+        ("model", ElasticNet(max_iter=20000, random_state=42))
+    ])
 
-    # Try several PCA component sizes
-    pca_list = [3, 5, 10, 15, 20, 30]
+    # Hyperparameter grid
+    param_grid = {
+        "pca__n_components": [2, 3, 4, 5, 10],
+        "model__alpha": [0.0001, 0.001, 0.01, 0.1],
+        "model__l1_ratio": [0.1, 0.3, 0.5, 0.7, 0.9]
+    }
 
-    best_rmse = float("inf")
-    best_n = None
-    best_r2 = None
+    # Cross-validation
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-    for n in pca_list:
-        print(f"PCA components: {n}")
+    grid = GridSearchCV(
+        pipeline,
+        param_grid,
+        cv=kf,
+        scoring="neg_root_mean_squared_error",
+        n_jobs=-1
+    )
 
-        pca = PCA(n_components=n)
-        X_pca = pca.fit_transform(X_scaled)
+    grid.fit(X, y)
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_pca, y, test_size=0.2, random_state=42
-        )
+    print("Best Parameters:")
+    print(grid.best_params_)
+    print("-" * 40)
 
-        model = ElasticNet(alpha=0.001, l1_ratio=0.5, max_iter=10000)
+    best_rmse = -grid.best_score_
+    print(f"Best Cross-Validated RMSE: {best_rmse:.6f}")
 
-        r2, rmse = evaluate_model(
-            "ElasticNet + PCA",
-            model,
-            X_train,
-            X_test,
-            y_train,
-            y_test
-        )
+    # 추가: R² 계산
+    best_model = grid.best_estimator_
+    y_pred = best_model.predict(X)
+    r2 = 1 - np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2)
 
-        if rmse < best_rmse:
-            best_rmse = rmse
-            best_n = n
-            best_r2 = r2
-
-    print("\nBEST PCA RESULT")
-    print(f"Best PCA components: {best_n}")
-    print(f"Best Testing R^2: {best_r2:.4f}")
-    print(f"Best Testing RMSE: {best_rmse:.6f}")
+    print(f"R^2 (on full data): {r2:.4f}")
 
 
 if __name__ == "__main__":
