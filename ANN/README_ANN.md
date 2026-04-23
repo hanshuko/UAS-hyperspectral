@@ -1,3 +1,4 @@
-Likely for research into artifical neural nets that never fully got off the ground.
+# Artificial Neural Network Folder
 
-  Suggest deletion since nwe have discussed moving away from NNs.
+## Purpose
+Likely for neural net work that occurred before transitioning to Python. Please push any files to this folder from back then that could inform future work. README will be updated accordingly.
