@@ -1,0 +1,112 @@
+import os
+import numpy as np
+import scipy.io as sio
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+
+
+def load_last_mat_variable(mat_dict):
+    keys = [k for k in mat_dict.keys() if not k.startswith("__")]
+    if len(keys) == 0:
+        raise ValueError("No valid data keys found in .mat file.")
+    return mat_dict[keys[-1]]
+
+
+def evaluate_model(name, model, X_train, X_test, y_train, y_test):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    r2 = r2_score(y_test, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+    print(name)
+    print(f"  Testing R^2: {r2:.4f}")
+    print(f"  Testing RMSE: {rmse:.6f}")
+    print("-" * 40)
+
+    return r2, rmse
+
+
+def main():
+    # Load data
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base_dir, "..", "ML_Data")
+
+    signals = sio.loadmat(os.path.join(data_dir, "Signals.mat"))
+    moisture = sio.loadmat(os.path.join(data_dir, "Moisture_Percentage.mat"))
+
+    X = load_last_mat_variable(signals).T
+    y = load_last_mat_variable(moisture).T.ravel()
+
+    print("X shape:", X.shape)
+    print("y shape:", y.shape)
+    print("-" * 40)
+
+    # Train-test split first
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    # Scale using training data only
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    # 1) Linear baseline
+    linear = LinearRegression()
+    evaluate_model("Linear Regression", linear, X_train_scaled, X_test_scaled, y_train, y_test)
+
+    # 2) Ridge tuning
+    ridge_alphas = [0.01, 0.1, 1.0, 10.0, 100.0]
+    best_ridge_rmse = float("inf")
+    best_ridge_alpha = None
+
+    print("RIDGE TUNING")
+    for alpha in ridge_alphas:
+        ridge = Ridge(alpha=alpha)
+        r2, rmse = evaluate_model(
+            f"Ridge Regression (alpha={alpha})",
+            ridge,
+            X_train_scaled,
+            X_test_scaled,
+            y_train,
+            y_test
+        )
+        if rmse < best_ridge_rmse:
+            best_ridge_rmse = rmse
+            best_ridge_alpha = alpha
+
+    print(f"Best Ridge alpha: {best_ridge_alpha}")
+    print(f"Best Ridge RMSE: {best_ridge_rmse:.6f}")
+    print("=" * 50)
+
+    # 3) Lasso tuning
+    lasso_alphas = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]
+    best_lasso_rmse = float("inf")
+    best_lasso_alpha = None
+
+    print("LASSO TUNING")
+    for alpha in lasso_alphas:
+        lasso = Lasso(alpha=alpha, max_iter=20000)
+        r2, rmse = evaluate_model(
+            f"Lasso Regression (alpha={alpha})",
+            lasso,
+            X_train_scaled,
+            X_test_scaled,
+            y_train,
+            y_test
+        )
+        if rmse < best_lasso_rmse:
+            best_lasso_rmse = rmse
+            best_lasso_alpha = alpha
+
+    print(f"Best Lasso alpha: {best_lasso_alpha}")
+    print(f"Best Lasso RMSE: {best_lasso_rmse:.6f}")
+    print("=" * 50)
+
+
+if __name__ == "__main__":
+    main()
