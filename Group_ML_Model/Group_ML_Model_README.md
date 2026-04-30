@@ -78,7 +78,7 @@ The primary goal is to build and compare different machine learning regression m
 
 ### Supplementary Analysis Files
 
-#### **Marc.py**
+#### **PCARegression.py**
 - **Purpose**: Experimental polynomial regression with PCA preprocessing
 - **Approach**: PCA feature extraction followed by polynomial regression
 - **Key Features**:
