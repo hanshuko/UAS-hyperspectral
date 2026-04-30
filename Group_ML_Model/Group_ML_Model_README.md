@@ -78,7 +78,7 @@ The primary goal is to build and compare different machine learning regression m
 
 ### Supplementary Analysis Files
 
-#### **Marc.py**
+#### **PCARegression.py**
 - **Purpose**: Experimental polynomial regression with PCA preprocessing
 - **Approach**: PCA feature extraction followed by polynomial regression
 - **Key Features**:
@@ -86,7 +86,6 @@ The primary goal is to build and compare different machine learning regression m
   - Tests polynomial degrees 1, 2, and 3
   - Produces scatter and line plots for visual evaluation
   - Calculates R², MSE, MAE, and RMSE metrics
-  - **CHANGE TITLE TO REFLECT CONTENT**
 
 #### **SavgolAndLinRegression.py**
 - **Purpose**: Demonstrates end-to-end pipeline with spectral smoothing
@@ -96,6 +95,17 @@ The primary goal is to build and compare different machine learning regression m
   - 4-component PCA reduction
   - Tests polynomial degrees 1 and 2
   - Comprehensive visualization
+
+#### **SavGolPCARegCV.py**
+- **Purpose**: Builds an end-to-end regression pipeline for predicting moisture percentage from spectral signals using cross-validation
+- **Approach**: Savitzky–Golay first derivative → Scaling → PCA → Polynomial Regression → 5-fold cross-validation.
+- **Key Features**:
+  - Uses a Pipeline to avoid data leakage during cross-validation
+  - Applies Savitzky–Golay derivative preprocessing to spectral data 
+  - Reduces dimensionality using PCA before regression
+  - Compare polynomial regression models
+  - Applying k-fold cross validation to evaluate model performance
+
 
 #### **Smoothing.py**
 - **Purpose**: Reusable spectral preprocessing utility
@@ -142,3 +152,4 @@ All scripts expect data files in the `../ML_Data/` directory relative to this fo
    ```bash
    pip install -r requirements.txt
 2. Please ensure that scripts are functional, pipelines are secure, and procedures are well-commented before introducing experimental code to this folder.
+
