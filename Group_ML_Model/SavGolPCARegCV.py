@@ -53,11 +53,8 @@ def test_poly_model(degree):
     print("CV MAE:", mae)
     print("CV RMSE:", rmse)
 
-    # Plotting CV results
-    plt.figure(figsize=(12, 5))
-
-    # Scatter plot: actual vs CV-predicted
-    plt.subplot(1, 2, 1)
+    # Scatter plot vs perfect prediction 
+    plt.figure(figsize=(10,6))
     plt.scatter(y, y_cv_pred, alpha=0.7)
     min_val = min(y.min(), y_cv_pred.min())
     max_val = max(y.max(), y_cv_pred.max())
@@ -65,16 +62,6 @@ def test_poly_model(degree):
     plt.xlabel("Actual FMC")
     plt.ylabel("CV Predicted FMC")
     plt.title(f"Cross-Validated Predictions (Degree {degree})")
-    plt.grid(True)
-
-    # Line plot: actual vs CV-predicted
-    plt.subplot(1,2,2)
-    plt.scatter(range(len(y)), y, label="Actual Moisture", marker='o')
-    plt.scatter(range(len(y_cv_pred)), y_cv_pred, label="Predicted Moisture", marker='s')
-    plt.title(f"Actual vs Predicted (Degree {degree})")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Moisture (%)")
-    plt.legend()
     plt.grid(True)
 
     plt.tight_layout()

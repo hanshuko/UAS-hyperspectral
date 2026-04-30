@@ -1,4 +1,19 @@
-## Marc's note
+import scipy.io as sio
+import os
+from sklearn import linear_model
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler,PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+# Load Data
+Signals = sio.loadmat('../ML_Data/Signals.mat')
+Moisture = sio.loadmat('../ML_Data/Moisture_Percentage.mat')
+
+X = Signals[list(Signals.keys())[-1]].T
+y = Moisture[list(Moisture.keys())[-1]].T.ravel()
 # Scale inputs (important for PCA)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
@@ -9,7 +24,7 @@ X_pca = pca.fit_transform(X_scaled)
 print("Explained variance:", pca.explained_variance_ratio_.sum())
 
 # Train/Test split
-X_train, X_test, y_train, y_test = train_test_split(X_pca, Y, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.3, random_state=42)
 
 # Function to evaluate polynomial regression
 def test_poly_model(degree):
@@ -33,11 +48,9 @@ def test_poly_model(degree):
     print("MSE:", mse)
     print("MAE:", mae)
     print("RMSE:", rmse)
-    # ---- PLOTTING ----
-    plt.figure(figsize=(12,5))
 
-    # Scatter plot
-    plt.subplot(1,2,1)
+    #  Scatter plot vs perfect prediction 
+    plt.figure(figsize=(10,6))
     plt.scatter(y_test, y_pred, alpha=0.7)
     min_val = min(y_test.min(), y_pred.min())
     max_val = max(y_test.max(), y_pred.max())
@@ -45,16 +58,6 @@ def test_poly_model(degree):
     plt.xlabel("Actual FMC")
     plt.ylabel("Predicted FMC")
     plt.title(f"PCA + Polynomial Regression (Degree {degree})")
-
-    # Line plot
-    plt.subplot(1,2,2)
-    plt.plot(y_test, 'o-', label="Actual Moisutre")
-    plt.plot(y_pred, 's--',label="Predicted Moisture")
-    plt.title(f"Actual vs Predicted (Degree {degree})")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Moisture (%)")
-    plt.legend()
-    plt.grid(True)
 
     plt.tight_layout()
     plt.show()

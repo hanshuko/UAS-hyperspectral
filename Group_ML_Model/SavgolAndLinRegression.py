@@ -69,11 +69,9 @@ def test_poly_model(degree):
     print("MSE:", mse)
     print("MAE:", mae)
     print("RMSE:", rmse)
-    # ---- PLOTTING ----
-    plt.figure(figsize=(12,5))
 
-    # Scatter plot
-    plt.subplot(1,2,1)
+   #  Scatter plot vs perfect prediction 
+    plt.figure(figsize=(10,6))
     plt.scatter(y_test, y_pred, alpha=0.7)
     min_val = min(y_test.min(), y_pred.min())
     max_val = max(y_test.max(), y_pred.max())
@@ -81,15 +79,6 @@ def test_poly_model(degree):
     plt.xlabel("Actual FMC")
     plt.ylabel("Predicted FMC")
     plt.title(f"PCA + Polynomial Regression (Degree {degree})")
-
-    # Line plot
-    plt.subplot(1,2,2)
-    plt.plot(y_test, 'o-', label="Actual Moisutre")
-    plt.plot(y_pred, 's--',label="Predicted Moisture")
-    plt.title(f"Actual vs Predicted (Degree {degree})")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Moisture (%)")
-    plt.legend()
     plt.grid(True)
 
     plt.tight_layout()
