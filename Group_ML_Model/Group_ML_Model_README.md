@@ -86,7 +86,6 @@ The primary goal is to build and compare different machine learning regression m
   - Tests polynomial degrees 1, 2, and 3
   - Produces scatter and line plots for visual evaluation
   - Calculates R², MSE, MAE, and RMSE metrics
-  - **CHANGE TITLE TO REFLECT CONTENT**
 
 #### **SavgolAndLinRegression.py**
 - **Purpose**: Demonstrates end-to-end pipeline with spectral smoothing
