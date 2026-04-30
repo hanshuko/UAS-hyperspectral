@@ -67,8 +67,6 @@ def test_poly_model(degree):
     plt.tight_layout()
     plt.show()
 
-
-
      #fold score bar plot
     plt.figure(figsize=(6, 4))
     plt.bar(range(1, len(cv_scores) + 1), cv_scores)
