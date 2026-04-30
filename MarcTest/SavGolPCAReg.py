@@ -68,10 +68,10 @@ def test_poly_model(degree):
     plt.grid(True)
 
     # Line plot: actual vs CV-predicted
-    plt.subplot(1, 2, 2)
-    plt.plot(y, 'o-', label="Actual Moisture")
-    plt.plot(y_cv_pred, 's--', label="CV Predicted Moisture")
-    plt.title(f"Cross-Validated Actual vs Predicted (Degree {degree})")
+    plt.subplot(1,2,2)
+    plt.scatter(range(len(y)), y, label="Actual Moisture", marker='o')
+    plt.scatter(range(len(y_cv_pred)), y_cv_pred, label="Predicted Moisture", marker='s')
+    plt.title(f"Actual vs Predicted (Degree {degree})")
     plt.xlabel("Sample Index")
     plt.ylabel("Moisture (%)")
     plt.legend()
@@ -80,16 +80,18 @@ def test_poly_model(degree):
     plt.tight_layout()
     plt.show()
 
-    # Optional: fold score bar plot
-    #plt.figure(figsize=(6, 4))
-    #plt.bar(range(1, len(cv_scores) + 1), cv_scores)
-    #plt.xlabel("Fold")
-    #plt.ylabel("R² Score")
-    #plt.title(f"CV Fold R² Scores (Degree {degree})")
-    #plt.grid(True)
-    #plt.show()
+
+
+     #fold score bar plot
+    plt.figure(figsize=(6, 4))
+    plt.bar(range(1, len(cv_scores) + 1), cv_scores)
+    plt.xlabel("Fold")
+    plt.ylabel("R² Score")
+    plt.title(f"CV Fold R² Scores (Degree {degree})")
+    plt.grid(True)
+    plt.show()
 
 # Test linear, quadratic, cubic
 test_poly_model(1)
 test_poly_model(2)
-test_poly_model(3)
+#test_poly_model(3)

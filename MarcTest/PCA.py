@@ -26,7 +26,7 @@ X_pca = pca.fit_transform(X_scaled)
 print("Explained variance:", pca.explained_variance_ratio_.sum())
 
 # Train/Test split
-X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
 # Function to evaluate polynomial regression
 def test_poly_model(degree):
@@ -61,12 +61,14 @@ def test_poly_model(degree):
     plt.plot([min_val, max_val], [min_val, max_val], 'r--')
     plt.xlabel("Actual FMC")
     plt.ylabel("Predicted FMC")
-    plt.title(f"PCA + Polynomial Regression (Degree {degree})")
+    plt.title(f"Polynomial Regression (Degree {degree})")
 
     # Line plot
     plt.subplot(1,2,2)
-    plt.plot(y_test, 'o-', label="Actual Moisutre")
-    plt.plot(y_pred, 's--',label="Predicted Moisture")
+
+    plt.scatter(range(len(y_test)), y_test, label="Actual Moisture", marker='o')
+    plt.scatter(range(len(y_pred)), y_pred, label="Predicted Moisture", marker='s')
+
     plt.title(f"Actual vs Predicted (Degree {degree})")
     plt.xlabel("Sample Index")
     plt.ylabel("Moisture (%)")
@@ -79,7 +81,7 @@ def test_poly_model(degree):
 # Test linear, quadratic, cubic
 test_poly_model(1)
 test_poly_model(2)
-test_poly_model(3)
+#test_poly_model(3)
 # PCA Explained Variance Plot
 #plt.figure(figsize=(6,4))
 #plt.bar(range(1,4), pca.explained_variance_ratio_*100)
